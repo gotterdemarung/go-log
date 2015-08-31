@@ -4,16 +4,15 @@ import (
 	"reflect"
 	"strconv"
 	"regexp"
-	"fmt"
 )
 
-var substitutionsRegex = regexp.MustCompile(":\\w[\\w]+[$,\\. ]");
+var substitutionsRegex = regexp.MustCompile(":\\w[\\w]+[$\n,\\. ]");
 
 func Substitute(original string, callback func(string, string, string) string) string {
 	return substitutionsRegex.ReplaceAllStringFunc(original, func(in string) string {
 		offset := 0
 		separator := ""
-		if last := in[len(in)-1:]; last == "," || last == "." || last == " " {
+		if last := in[len(in)-1:]; last == "," || last == "." || last == " " || last == "\n" {
 			offset = 1
 			separator = last
 		}
@@ -22,14 +21,19 @@ func Substitute(original string, callback func(string, string, string) string) s
 	});
 }
 
-func SubstituteTypeHelper(value interface{}, nilf func() string, strf func(string) string, numf func(string) string) string {
+func SubstituteTypeHelper(
+	value interface{},
+	nilf func() string,
+	strf func(string) string,
+	numf func(string) string,
+	boolf func(string) string,
+) string {
 
 	if value == nil {
 		return nilf()
 	}
 
 	v := reflect.ValueOf(value)
-	fmt.Printf("> %s %v\n", v.Kind().String(), value)
 	switch v.Kind() {
 	case reflect.Func:
 		result := v.Call(nil)[0]
@@ -38,11 +42,18 @@ func SubstituteTypeHelper(value interface{}, nilf func() string, strf func(strin
 			nilf,
 			strf,
 			numf,
+			boolf,
 		)
 	case reflect.Ptr:
 		return "*ptr"
 	case reflect.String:
 		return strf(value.(string))
+	case reflect.Bool:
+		if value.(bool) == true {
+			return boolf("true")
+		} else {
+			return boolf("false")
+		}
 	case reflect.Int:
 		return numf(strconv.FormatInt(int64(value.(int)), 10))
 	case reflect.Int8:
@@ -59,5 +70,5 @@ func SubstituteTypeHelper(value interface{}, nilf func() string, strf func(strin
 		return numf(strconv.FormatFloat(value.(float64), 'f', -1, 64))
 	}
 
-	return " oops! "
+	return v.String()
 }

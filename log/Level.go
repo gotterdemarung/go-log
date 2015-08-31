@@ -1,13 +1,15 @@
 package log
 
 type Level int
+
 const (
-	TRACE Level = iota
-	DEBUG
-	INFO
-	WARN
-	ERROR
+	TRACE 	Level = 1
+	DEBUG	Level = 2
+	INFO	Level = 3
+	WARN	Level = 4
+	ERROR	Level = 5
 )
+
 func (l *Level) ToString() string {
 	switch *l {
 	case TRACE:
@@ -22,4 +24,8 @@ func (l *Level) ToString() string {
 		return "error"
 	}
 	return "unknown"
+}
+
+func (l Level) LesserOrEq(other Level) bool {
+	return l <= other
 }

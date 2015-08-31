@@ -25,18 +25,31 @@ func (d *AppenderDispatcher) FromCli() {
 	logtime := inSlice(args, "--logtime")
 	nocolors := inSlice(args, "--nocolor") || inSlice(args, "--no-color") || inSlice(args, "--no-ansi")
 
+	thresholdLevel := INFO
+	if inSlice(args, "-vv") || inSlice(args, "-vvv") {
+		thresholdLevel = TRACE
+	} else if inSlice(args, "-v") {
+		thresholdLevel = DEBUG
+	}
+
+	ansiAppender := GetAnsiAppender(
+		os.Stdout,
+		AppenderOptions{
+			Precise: logtime,
+			Tags: true,
+			Bullets: true,
+			Colors: !nocolors,
+		},
+	)
+
+	thresholder := Threshold{
+		AllowedLevel: thresholdLevel,
+		Next: ansiAppender,
+	}
+
+
 	if logall {
-		d.Register(
-			GetAnsiAppender(
-				os.Stdout,
-				AppenderOptions{
-					Precise: logtime,
-					Tags: true,
-					Bullets: true,
-					Colors: !nocolors,
-				},
-			),
-		)
+		d.Register(thresholder.Deliver)
 	}
 }
 

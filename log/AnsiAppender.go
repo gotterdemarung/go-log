@@ -1,7 +1,7 @@
 package log
 
 import (
-	"os"
+	"io"
 	"strings"
 	"github.com/mgutz/ansi"
 )
@@ -22,6 +22,7 @@ type AnsiPalette struct {
 	Tags colorFunc
 
 	TypeNil colorFunc
+	TypeBool colorFunc
 	TypeString colorFunc
 	TypeNumber colorFunc
 }
@@ -30,8 +31,8 @@ func AnsiBuildPalette(colorFuncGen colorFuncGen) AnsiPalette {
 	return AnsiPalette{
 		BulletTrace: colorFuncGen("black+h"),
 		BulletDebug: colorFuncGen("gray+h"),
-		BulletInfo: colorFuncGen("40:22"),
-		BulletWarn: colorFuncGen("184:58"),
+		BulletInfo: colorFuncGen("25"),
+		BulletWarn: colorFuncGen("184"),
 		BulletError: colorFuncGen("white+h:red"),
 
 		Time: colorFuncGen("24"),
@@ -40,6 +41,7 @@ func AnsiBuildPalette(colorFuncGen colorFuncGen) AnsiPalette {
 		Tags: colorFuncGen("60"),
 
 		TypeNil: colorFuncGen("97"),
+		TypeBool: colorFuncGen("103"),
 		TypeString: colorFuncGen("28"),
 		TypeNumber: colorFuncGen("25"),
 	}
@@ -52,7 +54,7 @@ func nullColorGenFunc(string) func(string) string {
 }
 
 
-func GetAnsiAppender(f *os.File, opts AppenderOptions) Appender {
+func GetAnsiAppender(f io.Writer, opts AppenderOptions) Appender {
 	var colorizer colorFuncGen;
 	if opts.Colors {
 		colorizer = ansi.ColorFunc
@@ -72,7 +74,6 @@ func GetAnsiAppender(f *os.File, opts AppenderOptions) Appender {
 	}
 
 	return func(p *LogPacket) {
-
 		str := ""
 		bullet, ok := bullets[p.Level]
 		if !ok && opts.Bullets {
@@ -92,9 +93,7 @@ func GetAnsiAppender(f *os.File, opts AppenderOptions) Appender {
 		}
 
 		if len(p.Values) > 0 {
-			str += Substitute(p.Message, func (full string, group string, separator string) string {
-				f.Write([]byte(full + " " + group + "\n"))
-
+			str += Substitute(p.Message + " ", func (full string, group string, separator string) string {
 				if val, ok := p.Values[group]; ok {
 					return SubstituteTypeHelper(
 						val,
@@ -104,6 +103,9 @@ func GetAnsiAppender(f *os.File, opts AppenderOptions) Appender {
 						},
 						func (in string) string {
 							return pal.TypeNumber(in) + separator
+						},
+						func (in string) string {
+							return pal.TypeBool(in) + separator
 						},
 					)
 					return val.(string) + separator
