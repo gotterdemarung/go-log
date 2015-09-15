@@ -1,6 +1,7 @@
 package log
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"regexp"
@@ -45,7 +46,7 @@ func SubstituteTypeHelper(
 			boolf,
 		)
 	case reflect.Ptr:
-		return "*ptr"
+		return fmt.Sprintf("%v", value)
 	case reflect.String:
 		return strf(value.(string))
 	case reflect.Bool:

@@ -5,17 +5,19 @@ import (
 	"time"
 )
 
-type LogPacket struct {
+// Log packet structure
+type Packet struct {
 	Time time.Time
 	Tags []string
-	Level Level
+	Level Type
 	Message string
 	Error error
 	Values map[string]interface{}
 }
 
-func ContextPacket(c *LogContext, l Level) *LogPacket {
-	return &LogPacket{
+// Returns common packet
+func CommonPacket(c *Logger, l Type) *Packet {
+	return &Packet{
 		Time: time.Now(),
 		Tags: c.Tags,
 		Level: l,
@@ -23,22 +25,25 @@ func ContextPacket(c *LogContext, l Level) *LogPacket {
 	}
 }
 
-func (lp *LogPacket) SimpleTime() string {
+// Returns packet time in hh:mm:ss format
+func (lp *Packet) SimpleTime() string {
 	return fmt.Sprintf(
 		"%02d:%02d:%02d",
 		lp.Time.Hour(), lp.Time.Minute(), lp.Time.Second(),
 	)
 }
 
-func (lp *LogPacket) PreciseString() string {
+// Returns packet milliseconds only (4 digits after point)
+func (lp *Packet) PreciseString() string {
 	return fmt.Sprintf(
 		"%04d",
 		lp.Time.Nanosecond() / 100000,
 	)
 }
 
-
-func (lp *LogPacket) ToString() string {
+// String representation of packet, for debug purposes only
+// Appenders must perform this operation manually
+func (lp *Packet) ToString() string {
 	return fmt.Sprintf(
 		"%02d:%02d:%02d.%06d {%s} %s",
 		lp.Time.Hour(), lp.Time.Minute(), lp.Time.Second(), lp.Time.Nanosecond(),

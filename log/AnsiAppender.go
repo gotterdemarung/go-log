@@ -12,7 +12,10 @@ type colorFuncGen func(string) func(string) string
 type AnsiPalette struct {
 	BulletTrace colorFunc
 	BulletDebug colorFunc
+	BulletIn colorFunc
+	BulletOut colorFunc
 	BulletInfo colorFunc
+	BulletSuccess colorFunc
 	BulletWarn colorFunc
 	BulletError colorFunc
 
@@ -31,7 +34,10 @@ func AnsiBuildPalette(colorFuncGen colorFuncGen) AnsiPalette {
 	return AnsiPalette{
 		BulletTrace: colorFuncGen("black+h"),
 		BulletDebug: colorFuncGen("gray+h"),
+		BulletIn: colorFuncGen("123"),
+		BulletOut: colorFuncGen("123"),
 		BulletInfo: colorFuncGen("25"),
+		BulletSuccess: colorFuncGen("white:28"),
 		BulletWarn: colorFuncGen("184"),
 		BulletError: colorFuncGen("white+h:red"),
 
@@ -53,8 +59,16 @@ func nullColorGenFunc(string) func(string) string {
 	}
 }
 
+// Common appender configuration
+type AnsiAppenderOptions struct {
+	Bullets bool
+	Time bool
+	Tags bool
+	Precise bool
+	Colors bool
+}
 
-func GetAnsiAppender(f io.Writer, opts AppenderOptions) Appender {
+func GetAnsiAppender(f io.Writer, opts AnsiAppenderOptions) Appender {
 	var colorizer colorFuncGen;
 	if opts.Colors {
 		colorizer = ansi.ColorFunc
@@ -64,16 +78,19 @@ func GetAnsiAppender(f io.Writer, opts AppenderOptions) Appender {
 
 	pal := AnsiBuildPalette(colorizer);
 
-	bullets := map[Level]string{}
+	bullets := map[Type]string{}
 	if opts.Bullets {
 		bullets[TRACE] = " " + pal.BulletTrace("---") + " ";
+		bullets[IN] = " " + pal.BulletIn("❮❮❮") + " ";
+		bullets[OUT] = " " + pal.BulletOut("❯❯❯") + " ";
 		bullets[DEBUG] = " " + pal.BulletDebug("DBG") + " ";
 		bullets[INFO] = " " + pal.BulletInfo("INF") + " ";
+		bullets[SUCCESS] = " " + pal.BulletSuccess(" ✓ ") + " ";
 		bullets[WARN] = " " + pal.BulletWarn("WRN") + " ";
 		bullets[ERROR] = " " + pal.BulletError("ERR") + " ";
 	}
 
-	return func(p *LogPacket) {
+	return func(p *Packet) {
 		str := ""
 		bullet, ok := bullets[p.Level]
 		if !ok && opts.Bullets {

@@ -1,3 +1,4 @@
 package log
 
-type Appender func(l *LogPacket)
+// Represents log packet receiver
+type Appender func(l *Packet)
