@@ -53,8 +53,7 @@ func (c *Logger) With(context map[string]interface{}) *Logger {
 }
 
 func (l *Logger) Log(level Type, line string) {
-	p := CommonPacket(l, level)
-	p.Message = line
+	p := PacketByLogger(l, level, line)
 	l.deliver(p)
 }
 

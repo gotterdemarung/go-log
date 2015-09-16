@@ -16,12 +16,13 @@ type Packet struct {
 }
 
 // Returns common packet
-func CommonPacket(c *Logger, l Type) *Packet {
+func PacketByLogger(c *Logger, l Type, message string) *Packet {
 	return &Packet{
 		Time: time.Now(),
 		Tags: c.Tags,
 		Level: l,
-		Values: make(map[string]interface{}),
+		Message: message,
+		Values: c.Context,
 	}
 }
 
