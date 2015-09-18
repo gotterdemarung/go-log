@@ -7,6 +7,14 @@ type Logger struct {
 	Context 	map[string]interface{}
 }
 
+func AttachContext (l *Logger, name string, value interface{}) {
+	if l.Context == nil {
+		l.Context = map[string]interface{}{}
+	}
+
+	l.Context[name] = value
+}
+
 // Merges two context maps
 func mergeCtxs(a map[string]interface{}, b map[string]interface{}) map[string]interface{} {
 	c := map[string]interface{}{}
