@@ -26,6 +26,17 @@ func PacketByLogger(c *Logger, l Type, message string) *Packet {
 	}
 }
 
+// Returns true if packet contains requested tag
+func (p *Packet) HasTag(name string) bool {
+	for _, t := range p.Tags {
+		if t == name {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Returns packet time in hh:mm:ss format
 func (lp *Packet) SimpleTime() string {
 	return fmt.Sprintf(

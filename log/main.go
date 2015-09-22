@@ -1,6 +1,8 @@
 package log
 
-import "os"
+import (
+	"os"
+)
 
 // Root dispatcher
 var Dispatcher *AsyncDispatcher
@@ -18,7 +20,7 @@ func init() {
 	}
 }
 
-func Autoconfig() {
+func Autoconfig(forcedTags ...string) {
 	args := os.Args[1:]
 
 	logall := inSlice(args, "--logall")
@@ -58,7 +60,15 @@ func Autoconfig() {
 			return thresholdLevel.LesserOrEq(l.Level) && l.Level.LesserThan(WARN)
 		}, stdoutAppender))
 	} else {
-
+		if len(forcedTags) > 0 {
+			for _, t := range forcedTags {
+				Dispatcher.Register(
+					WithCondition(func(l *Packet) bool {
+						return thresholdLevel.LesserOrEq(l.Level) && l.HasTag(t)
+					}, stdoutAppender),
+				)
+			}
+		}
 	}
 }
 
